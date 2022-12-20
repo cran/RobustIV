@@ -45,6 +45,7 @@ endo.test(
 \code{endo.test} returns an object of class "endotest", which is a list containing the following components:
    \item{\code{Q}}{The test statistic.}
    \item{\code{Sigma12}}{The estimated covaraince of the regression errors.}
+   \item{\code{SHat}}{The set of selected relevant IVs.}
    \item{\code{VHat}}{The set of selected vaild IVs.}
    \item{\code{p.value}}{The p-value of the endogeneity test.}
    \item{\code{check}}{The indicator that \eqn{H_0:\Sigma_{12}=0} is rejected.}
@@ -60,14 +61,14 @@ we adopt \eqn{\max{(\sqrt{2.01 \log p_z}, \sqrt{\log n})}} for both tuning param
 \examples{
 
 n = 500; L = 11; s = 3; k = 10; px = 10;
-alpha = c(rep(3,s),rep(0,L-s)); beta = 1; gamma = c(rep(1,k),rep(0,L-k))
+beta = 1; gamma = c(rep(1,k),rep(0,L-k))
 phi<-(1/px)*seq(1,px)+0.5; psi<-(1/px)*seq(1,px)+1
 epsilonSigma = matrix(c(1,0.8,0.8,1),2,2)
 Z = matrix(rnorm(n*L),n,L)
 X = matrix(rnorm(n*px),n,px)
 epsilon = MASS::mvrnorm(n,rep(0,2),epsilonSigma)
 D =  0.5 + Z \%*\% gamma + X \%*\% psi + epsilon[,1]
-Y = -0.5 + Z \%*\% alpha + D * beta + X \%*\% phi + epsilon[,2]
+Y = -0.5 + Z \%*\% c(rep(1,s),rep(0,L-s)) + D * beta + X \%*\% phi + epsilon[,2]
 endo.test.model <- endo.test(Y,D,Z,X,invalid = TRUE)
 summary(endo.test.model)
 

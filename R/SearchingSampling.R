@@ -7,7 +7,7 @@
 #' @param X The covariates observation of dimension \eqn{n \times p_x}.
 #' @param intercept Whether the intercept is included. (default = \code{TRUE})
 #' @param method The method used to estimate the reduced form parameters. \code{"OLS"} stands for ordinary least squares, \code{"DeLasso"} stands for the debiased Lasso estimator, and \code{"Fast.DeLasso"} stands for the debiased Lasso estimator with fast algorithm. (default = \code{"OLS"})
-#' @param robust If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors.  (default = \code{FALSE})
+#' @param robust If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors.  (default = \code{TRUE})
 #' @param Sampling If \code{TRUE}, use the proposed sampling method; else use the proposed searching method. (default=\code{TRUE})
 #' @param alpha The significance level (default=\code{0.05})
 #' @param CI.init An initial range for beta. If \code{NULL}, it will be generated automatically. (default=\code{NULL})
@@ -52,7 +52,7 @@
 #' }
 SearchingSampling <- function(Y, D, Z, X=NULL, intercept=TRUE,
                               method=c("OLS","DeLasso","Fast.DeLasso"),
-                              robust=FALSE, Sampling=TRUE, alpha=0.05,
+                              robust=TRUE, Sampling=TRUE, alpha=0.05,
                               CI.init = NULL, a=0.6,
                               rho=NULL, M=1000, prop=0.1, filtering=TRUE,
                               tuning.1st=NULL, tuning.2nd=NULL){
@@ -154,6 +154,9 @@ SearchingSampling <- function(Y, D, Z, X=NULL, intercept=TRUE,
   if (!is.null(colnames(Z))) {
     SHat = colnames(Z)[SHat]
     VHat = colnames(Z)[VHat]
+  } else{
+    SHat = paste("Z",SHat,sep="")
+    VHat = paste("Z",VHat,sep="")
   }
   returnList <- list(ci=CI, check=rule, SHat=SHat, VHat=VHat)
   class(returnList) <- "SS"
@@ -167,19 +170,12 @@ SearchingSampling <- function(Y, D, Z, X=NULL, intercept=TRUE,
 #' @export
 summary.SS<- function(object,...){
   SS <- object
-  cat("\nInitial set of Valid Instruments:", SS$VHat, "\n");
-  if (SS$check) {
-    cat("\nPlurality rule holds.\n")
-  } else {
-    cat("\nPlurality rule does not hold.\n")
-  }
-  cat(rep("_", 30), "\n")
   if (nrow(SS$ci)==1) {
-    cat("\nConfidence Interval for Beta: [", SS$ci[1], ",", SS$ci[2], "]", "\n", sep = '');
+    cat("Confidence Interval for Causal Effect: [", round(SS$ci[1],4), ",", round(SS$ci[2],4), "]", "\n", sep = '');
   } else {
-    cat("\nConfidence Intervals for Beta:\n")
+    cat("Confidence Intervals for Causal Effect:\n")
     for (i in 1:nrow(SS$ci)) {
-      cat("[", SS$ci[i,1], ",", SS$ci[i,2], "]", "\n", sep = '')
+      cat("[", round(SS$ci[i,1],4), ",", round(SS$ci[i,2],4), "]", "\n", sep = '')
     }
   }
 }

@@ -11,7 +11,7 @@ SearchingSampling(
   X = NULL,
   intercept = TRUE,
   method = c("OLS", "DeLasso", "Fast.DeLasso"),
-  robust = FALSE,
+  robust = TRUE,
   Sampling = TRUE,
   alpha = 0.05,
   CI.init = NULL,
@@ -37,7 +37,7 @@ SearchingSampling(
 
 \item{method}{The method used to estimate the reduced form parameters. \code{"OLS"} stands for ordinary least squares, \code{"DeLasso"} stands for the debiased Lasso estimator, and \code{"Fast.DeLasso"} stands for the debiased Lasso estimator with fast algorithm. (default = \code{"OLS"})}
 
-\item{robust}{If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors.  (default = \code{FALSE})}
+\item{robust}{If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors.  (default = \code{TRUE})}
 
 \item{Sampling}{If \code{TRUE}, use the proposed sampling method; else use the proposed searching method. (default=\code{TRUE})}
 

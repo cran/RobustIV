@@ -12,7 +12,7 @@ TSHT(
   intercept = TRUE,
   method = c("OLS", "DeLasso", "Fast.DeLasso"),
   voting = c("MaxClique", "MP", "Conservative"),
-  robust = FALSE,
+  robust = TRUE,
   alpha = 0.05,
   tuning.1st = NULL,
   tuning.2nd = NULL
@@ -33,7 +33,7 @@ TSHT(
 
 \item{voting}{The voting option used to estimate valid IVs. \code{'MP'} stands for majority and plurality voting, \code{'MaxClique'} stands for finding maximal clique in the IV voting matrix, and \code{'Conservative'} stands for conservative voting procedure. Conservative voting is used to get an initial estimator of valid IVs in the Searching-Sampling method. (default= \code{'MaxClique'}).}
 
-\item{robust}{If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors. (default = \code{FALSE})}
+\item{robust}{If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors. (default = \code{TRUE})}
 
 \item{alpha}{The significance level for the confidence interval. (default = \code{0.05})}
 

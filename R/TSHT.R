@@ -10,7 +10,7 @@
 #' @param intercept Whether the intercept is included. (default = \code{TRUE})
 #' @param method The method used to estimate the reduced form parameters. \code{"OLS"} stands for ordinary least squares, \code{"DeLasso"} stands for the debiased Lasso estimator, and \code{"Fast.DeLasso"} stands for the debiased Lasso estimator with fast algorithm. (default = \code{"OLS"})
 #' @param voting The voting option used to estimate valid IVs. \code{'MP'} stands for majority and plurality voting, \code{'MaxClique'} stands for finding maximal clique in the IV voting matrix, and \code{'Conservative'} stands for conservative voting procedure. Conservative voting is used to get an initial estimator of valid IVs in the Searching-Sampling method. (default= \code{'MaxClique'}).
-#' @param robust If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors. (default = \code{FALSE})
+#' @param robust If \code{TRUE}, the method is robust to heteroskedastic errors. If \code{FALSE}, the method assumes homoskedastic errors. (default = \code{TRUE})
 #' @param alpha The significance level for the confidence interval. (default = \code{0.05})
 #' @param tuning.1st The tuning parameter used in the 1st stage to select relevant instruments. If \code{NULL}, it will be generated data-dependently, see Details. (default=\code{NULL})
 #' @param tuning.2nd The tuning parameter used in the 2nd stage to select valid instruments. If \code{NULL}, it will be generated data-dependently, see Details. (default=\code{NULL})
@@ -43,7 +43,7 @@
 #' Guo, Z., Kang, H., Tony Cai, T. and Small, D.S. (2018), Confidence intervals for causal effects with invalid instruments by using two-stage hard thresholding with voting, \emph{J. R. Stat. Soc. B}, 80: 793-815. \cr
 #' }
 TSHT <- function(Y,D,Z,X,intercept=TRUE, method=c("OLS","DeLasso","Fast.DeLasso"),
-                 voting = c('MaxClique','MP','Conservative'), robust = FALSE, alpha=0.05,
+                 voting = c('MaxClique','MP','Conservative'), robust = TRUE, alpha=0.05,
                  tuning.1st=NULL, tuning.2nd=NULL) {
   stopifnot(is.logical(robust))
   method = match.arg(method)
@@ -70,6 +70,9 @@ TSHT <- function(Y,D,Z,X,intercept=TRUE, method=c("OLS","DeLasso","Fast.DeLasso"
   D = as.numeric(D)
 
   # Check Z
+  if (is.data.frame(Z)) {
+    Z <- as.matrix(Z)
+  }
   stopifnot(!missing(Z),(is.numeric(Z) || is.logical(Z)),(is.vector(Z) || is.matrix(Z)))
   stopifnot(all(!is.na(Z)))
   if (is.vector(Z)) {
@@ -80,6 +83,9 @@ TSHT <- function(Y,D,Z,X,intercept=TRUE, method=c("OLS","DeLasso","Fast.DeLasso"
 
   # Check X, if present
   if(!missing(X)) {
+    if (is.data.frame(X)) {
+      X <- as.matrix(X)
+    }
     stopifnot((is.numeric(X) || is.logical(X)),(is.vector(X))||(is.matrix(X) && nrow(X) == nrow(Z)))
     stopifnot(all(!is.na(X)))
     if (is.vector(X)) {
@@ -168,6 +174,9 @@ TSHT <- function(Y,D,Z,X,intercept=TRUE, method=c("OLS","DeLasso","Fast.DeLasso"
     if(!is.null(colnames(Z))){
       SHat = colnames(Z)[SHat]
       VHat = lapply(VHat, FUN=function(x) colnames(Z)[x])
+    } else{
+      SHat = paste("Z",SHat,sep="")
+      VHat = lapply(VHat,FUN=function(x) paste("Z",x,sep=""))
     }
   }else{
 
@@ -190,6 +199,9 @@ TSHT <- function(Y,D,Z,X,intercept=TRUE, method=c("OLS","DeLasso","Fast.DeLasso"
     if (!is.null(colnames(Z))) {
       SHat = colnames(Z)[SHat]
       VHat = colnames(Z)[VHat]
+    } else{
+      SHat = paste("Z",SHat,sep="")
+      VHat = paste("Z",VHat,sep="")
     }
   }
 

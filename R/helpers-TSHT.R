@@ -84,7 +84,7 @@ TSHT.VHat <- function(n, ITT_Y, ITT_D, V.Gamma, V.gamma, C, voting = 'MaxClique'
     Tn1 = Tn2 = max(sqrt(2.01*log(pz)), sqrt(log(n)))
   }
   if(!is.null(tuning.1st)) Tn1 = tuning.1st
-  if(!is.null(tuning.2nd)) Tn2 = tuning.1st
+  if(!is.null(tuning.2nd)) Tn2 = tuning.2nd
   ## First Stage
   SHat = (1:pz)[abs(ITT_D) > (Tn1 * sqrt(diag(V.gamma)/n))]
 
@@ -185,29 +185,41 @@ summary.TSHT <- function(object,...){
     colnames(result)<-c("betaHat","Std.Error",paste("CI(",round(TSHT1$alpha/2*100, digits=2), "%)", sep=""),
                         paste("CI(",round((1-TSHT1$alpha/2)*100, digits=2), "%)", sep=""),"Valid IVs")
     rownames(result)<-paste0("MaxClique",1:length(TSHT1$VHat))
-    result[,1] <- unlist(TSHT1$betaHat)
-    result[,2] <- unlist(TSHT1$beta.sdHat)
-    result[,3:4] <- matrix(unlist(TSHT1$ci),nrow = length(TSHT1$VHat),ncol = 2,byrow = T)
+    result[,1] <- round(unlist(TSHT1$betaHat),digits = 4)
+    result[,2] <- round(unlist(TSHT1$beta.sdHat),digits = 4)
+    result[,3:4] <- round(matrix(unlist(TSHT1$ci),nrow = length(TSHT1$VHat),ncol = 2,byrow = T),digits = 4)
     for (i in 1:length(TSHT1$VHat)) {
       result[i,5] <- paste(TSHT1$VHat[[i]], collapse = " ")
     }
-    cat("\nRelevant IVs:", TSHT1$SHat, "\n");
-    cat(rep("_", 30), "\n")
+    VHat.union <- Reduce(union,TSHT1$VHat)
+    invalidIV <- setdiff(TSHT1$SHat,VHat.union)
     print(result,right=F)
-  } else {
-    cat("\nRelevant IVs:", TSHT1$SHat, "\n");
     cat(rep("_", 30), "\n")
+    if (length(invalidIV)==0) {
+      cat("No invalid IV is detected","\n")
+    } else{
+      cat("Detected invalid IVs:",paste(invalidIV,collapse = " "),"\n")
+    }
+  } else {
     result<-matrix(NA, ncol=5, nrow=1)
     result <- data.frame(result)
     colnames(result)<-c("betaHat","Std.Error",paste("CI(",round(TSHT1$alpha/2*100, digits=2), "%)", sep=""),
                         paste("CI(",round((1-TSHT1$alpha/2)*100, digits=2), "%)", sep=""),"Valid IVs")
     rownames(result)<-""
-    result[,1] <- TSHT1$betaHat
-    result[,2] <- TSHT1$beta.sdHat
-    result[,3:4] <- TSHT1$ci
+    result[,1] <- round(TSHT1$betaHat, digits = 4)
+    result[,2] <- round(TSHT1$beta.sdHat,digits = 4)
+    result[,3:4] <- round(TSHT1$ci,digits =4)
     result[,5] <- paste(TSHT1$VHat,collapse = " ")
+    invalidIV <- setdiff(TSHT1$SHat,TSHT1$VHat)
     print(result,right=F)
+    cat(rep("_", 30), "\n")
+    if (length(invalidIV)==0) {
+      cat("No invalid IV is detected","\n")
+    } else{
+      cat("Detected invalid IVs:",paste(invalidIV,collapse = " "),"\n")
+    }
   }
+
 }
 
 SoftThreshold <- function( x, lambda ) {

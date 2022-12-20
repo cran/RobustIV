@@ -24,6 +24,7 @@
 #'     \code{endo.test} returns an object of class "endotest", which is a list containing the following components:
 #'    \item{\code{Q}}{The test statistic.}
 #'    \item{\code{Sigma12}}{The estimated covaraince of the regression errors.}
+#'    \item{\code{SHat}}{The set of selected relevant IVs.}
 #'    \item{\code{VHat}}{The set of selected vaild IVs.}
 #'    \item{\code{p.value}}{The p-value of the endogeneity test.}
 #'    \item{\code{check}}{The indicator that \eqn{H_0:\Sigma_{12}=0} is rejected.}
@@ -32,14 +33,14 @@
 #' @examples
 #'
 #' n = 500; L = 11; s = 3; k = 10; px = 10;
-#' alpha = c(rep(3,s),rep(0,L-s)); beta = 1; gamma = c(rep(1,k),rep(0,L-k))
+#' beta = 1; gamma = c(rep(1,k),rep(0,L-k))
 #' phi<-(1/px)*seq(1,px)+0.5; psi<-(1/px)*seq(1,px)+1
 #' epsilonSigma = matrix(c(1,0.8,0.8,1),2,2)
 #' Z = matrix(rnorm(n*L),n,L)
 #' X = matrix(rnorm(n*px),n,px)
 #' epsilon = MASS::mvrnorm(n,rep(0,2),epsilonSigma)
 #' D =  0.5 + Z %*% gamma + X %*% psi + epsilon[,1]
-#' Y = -0.5 + Z %*% alpha + D * beta + X %*% phi + epsilon[,2]
+#' Y = -0.5 + Z %*% c(rep(1,s),rep(0,L-s)) + D * beta + X %*% phi + epsilon[,2]
 #' endo.test.model <- endo.test(Y,D,Z,X,invalid = TRUE)
 #' summary(endo.test.model)
 #'
@@ -72,6 +73,9 @@ endo.test <- function(Y,D,Z,X,intercept=TRUE,invalid=FALSE, method=c("Fast.DeLas
   D = as.numeric(D)
 
   # Check Z
+  if (is.data.frame(Z)) {
+    Z <- as.matrix(Z)
+  }
   stopifnot(!missing(Z),(is.numeric(Z) || is.logical(Z)),(is.vector(Z) || is.matrix(Z)))
   stopifnot(all(!is.na(Z)))
   if (is.vector(Z)) {
@@ -82,6 +86,9 @@ endo.test <- function(Y,D,Z,X,intercept=TRUE,invalid=FALSE, method=c("Fast.DeLas
 
   # Check X, if present
   if(!missing(X)) {
+    if (is.data.frame(X)) {
+      X <- as.matrix
+    }
     stopifnot((is.numeric(X) || is.logical(X)),(is.vector(X))||(is.matrix(X) && nrow(X) == nrow(Z)))
     stopifnot(all(!is.na(X)))
     if (is.vector(X)) {
@@ -124,10 +131,11 @@ endo.test <- function(Y,D,Z,X,intercept=TRUE,invalid=FALSE, method=c("Fast.DeLas
   voting = match.arg(voting)
   if (invalid) {
     SetHats = TSHT.VHat(n, ITT_Y, ITT_D, V.Gamma, V.gamma, C, voting, method=method,tuning.1st=tuning.1st, tuning.2nd=tuning.2nd)
+    SHat = SetHats$SHat
     Set = SetHats$VHat
   } else {
-    SetHats <- endo.SHat(n,ITT_D,V.gamma,method=method,tuning.1st=tuning.1st, tuning.2nd=tuning.2nd)
-    Set = SetHats
+    SetHats <- endo.SHat(n,ITT_D,V.gamma,method=method,tuning.1st=tuning.1st)
+    SHat = Set = SetHats
   }
 
   if(typeof(Set)=="list"){
@@ -154,7 +162,11 @@ endo.test <- function(Y,D,Z,X,intercept=TRUE,invalid=FALSE, method=c("Fast.DeLas
       check[[i.VHat]] = check.i
     }
     if(!is.null(colnames(Z))){
+      SHat = colnames(Z)[SHat]
       Set = lapply(Set, FUN=function(x) colnames(Z)[x])
+    } else{
+      SHat = paste("Z",SHat,sep="")
+      Set = lapply(Set,FUN=function(x) paste("Z",x,sep=""))
     }
   }else {
     # Obtain point est and our test statistic Q
@@ -169,12 +181,16 @@ endo.test <- function(Y,D,Z,X,intercept=TRUE,invalid=FALSE, method=c("Fast.DeLas
     Q = sqrt(n)*Sigma12/sqrt(VarSig12) # our test statistic
 
     if (!is.null(colnames(Z))) {
+      SHat = colnames(Z)[SHat]
       Set = colnames(Z)[Set]
+    } else{
+      SHat = paste("Z",SHat,sep="")
+      Set = paste("Z",Set,sep="")
     }
     p.value <- 2*(1-pnorm(abs(Q)))
     check <- (abs(Q)>qnorm(1-alpha/2))
   }
-  endo.test.model <- list(Q=Q,Sigma12=Sigma12,VHat=Set,p.value = p.value,check = check,alpha = alpha)
+  endo.test.model <- list(Q=Q,Sigma12=Sigma12,SHat = SHat, VHat=Set,p.value = p.value,check = check,alpha = alpha)
   class(endo.test.model) <- "endotest"
   return(endo.test.model)
 
